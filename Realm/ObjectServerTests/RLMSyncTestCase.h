@@ -24,7 +24,7 @@ typedef void(^RLMSyncBasicErrorReportingBlock)(NSError * _Nullable);
 NS_ASSUME_NONNULL_BEGIN
 
 @interface RLMSyncManager ()
-- (void)setSessionCompletionNotifier:(RLMSyncBasicErrorReportingBlock)sessionCompletionNotifier;
+- (void)setSessionCompletionNotifier:(nullable RLMSyncBasicErrorReportingBlock)sessionCompletionNotifier;
 @end
 
 @interface SyncObject : RLMObject
@@ -38,9 +38,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface RLMSyncTestCase : RLMMultiProcessTestCase
 
-+ (RLMSyncManager *)managerForCurrentTest;
-
 + (NSURL *)authServerURL;
++ (NSURL *)secureAuthServerURL;
 
 + (RLMSyncCredentials *)basicCredentialsWithName:(NSString *)name register:(BOOL)shouldRegister;
 
@@ -48,6 +47,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Retrieve the administrator token.
 - (NSString *)adminToken;
+
+/// Read and delete the last email sent by ROS to the given address.
+/// Returns nil if none has been sent to that address.
+- (nullable NSString *)emailForAddress:(NSString *)email;
 
 /// Synchronously open a synced Realm and wait until the binding process has completed or failed.
 - (RLMRealm *)openRealmForURL:(NSURL *)url user:(RLMSyncUser *)user;
@@ -119,6 +122,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Manually set the refresh token for a user. Used for testing invalid token conditions.
 - (void)manuallySetRefreshTokenForUser:(RLMSyncUser *)user value:(NSString *)tokenValue;
+
+- (void)setupSyncManager;
+- (void)resetSyncManager;
 
 @end
 

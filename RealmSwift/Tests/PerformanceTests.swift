@@ -48,7 +48,7 @@ class SwiftPerformanceTests: TestCase {
     }
 #else
     override class func defaultTestSuite() -> XCTestSuite {
-#if !DEBUG && os(iOS)
+#if !DEBUG && os(iOS) && !TARGET_OS_MACCATALYST
         if isRunningOnDevice {
             return super.defaultTestSuite()
         }
@@ -510,7 +510,11 @@ class SwiftPerformanceTests: TestCase {
             self.startMeasuring()
             try! realm.write { object.intCol += 1 }
             while object.intCol < stopValue {
-                RunLoop.current.run(mode: RunLoopMode.defaultRunLoopMode, before: Date.distantFuture)
+                #if swift(>=4.2)
+                    RunLoop.current.run(mode: RunLoop.Mode.default, before: Date.distantFuture)
+                #else
+                    RunLoop.current.run(mode: RunLoopMode.defaultRunLoopMode, before: Date.distantFuture)
+                #endif
             }
             queue.sync {}
             self.stopMeasuring()

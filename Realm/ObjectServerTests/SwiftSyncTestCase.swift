@@ -73,12 +73,13 @@ class SwiftSyncTestCase: RLMSyncTestCase {
     var task: Process?
 
     let authURL: URL = URL(string: "http://127.0.0.1:9080")!
-    let realmURL: URL = URL(string: "realm://localhost:9080/~/testBasicSync")!
+    let slowConnectAuthURL: URL = URL(string: "http://127.0.0.1:9083")!
+    let realmURL: URL = URL(string: "realm://127.0.0.1:9080/~/testBasicSync")!
 
-    /// For testing, make a unique Realm URL of the form "realm://localhost:9080/~/X",
+    /// For testing, make a unique Realm URL of the form "realm://127.0.0.1:9080/~/X",
     /// where X is either a custom string passed as an argument, or an UUID string.
     static func uniqueRealmURL(customName: String? = nil) -> URL {
-        return URL(string: "realm://localhost:9080/~/\(customName ?? UUID().uuidString)")!
+        return URL(string: "realm://127.0.0.1:9080/~/\(customName ?? UUID().uuidString)")!
     }
 
     func executeChild(file: StaticString = #file, line: UInt = #line) {
@@ -94,7 +95,7 @@ class SwiftSyncTestCase: RLMSyncTestCase {
     }
 
     func synchronouslyOpenRealm(url: URL, user: SyncUser, file: StaticString = #file, line: UInt = #line) throws -> Realm {
-        let config = Realm.Configuration(syncConfiguration: SyncConfiguration(user: user, realmURL: url))
+        let config = user.configuration(realmURL: url, fullSynchronization: true)
         return try synchronouslyOpenRealm(configuration: config)
     }
 
@@ -110,12 +111,13 @@ class SwiftSyncTestCase: RLMSyncTestCase {
         SyncManager.shared.setSessionCompletionNotifier(basicBlock)
         let realm = try Realm(configuration: configuration)
         let result = semaphore.wait(timeout: .now() + DispatchTimeInterval.seconds(20))
+        SyncManager.shared.setSessionCompletionNotifier(nil)
         XCTAssertEqual(result, .success)
         return realm
     }
 
     func immediatelyOpenRealm(url: URL, user: SyncUser) throws -> Realm {
-        return try Realm(configuration: Realm.Configuration(syncConfiguration: SyncConfiguration(user: user, realmURL: url)))
+        return try Realm(configuration: user.configuration(realmURL: url, fullSynchronization: true))
     }
 
     func synchronouslyLogInUser(for credentials: SyncCredentials,
